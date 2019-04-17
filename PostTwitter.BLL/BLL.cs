@@ -1,4 +1,7 @@
-﻿using System;
+﻿using PostTwitter.DataAcess;
+using PostTwitter.Model;
+using System;
+using System.Collections.Generic;
 using Tweetinvi;
 using Tweetinvi.Models;
 
@@ -8,34 +11,63 @@ namespace PostTwitter.BusinnesLayer
     {
         public void Init()
         {
+            Console.WriteLine("Iniciar");
+
             Auth.SetUserCredentials(MyCredentials.CONSUMER_API_KEY, MyCredentials.CONSUMER_API_SECRET_KEY, MyCredentials.ACCESS_TOKEN, MyCredentials.ACCESS_TOKEN_SECRET);
             var user = User.GetAuthenticatedUser();
 
             Console.Write(user);
         }
 
-        public void GetHastTag(string query)
+        public void ListarPostagensTwitter()
         {
-            RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackAndAwait;
+            Console.WriteLine("Carregar Postagens");
 
-            var searchParameter = Search.CreateTweetSearchParameter(query);
-            searchParameter.SearchType = SearchResultType.Recent;
-            searchParameter.MaximumNumberOfResults = 100; 
-            searchParameter.Since = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
-            var tweets = Search.SearchTweets(searchParameter);
-
-            foreach (var item in tweets)
+            try
             {
-                
+                using (DAL dal = new DAL())
+                {
+                    List<HashTag> hashTags = dal.BuscarHashTags();
+                    Execucao execucao = dal.InsertExecucao();
+
+                    List<Twitters> lstTwitters = new List<Twitters>();
+
+                    RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackAndAwait;
+
+                    foreach (var hashTag in hashTags)
+                    {
+                        var searchParameter = Search.CreateTweetSearchParameter(hashTag.Descricao);
+                        searchParameter.SearchType = SearchResultType.Recent;
+                        searchParameter.MaximumNumberOfResults = 100;
+                        searchParameter.Since = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+
+                        IEnumerable<ITweet> tweets = Search.SearchTweets(searchParameter);
+
+                        foreach (var item in tweets)
+                        {
+                            lstTwitters.Add(new Twitters()
+                            {
+                                idHashTag = hashTag.Id,
+                                texto = item.FullText,
+                                datatwitte = item.CreatedAt,
+                                idioma = item.Language.ToString(),
+                                usuario = item.CreatedBy.Name,
+                                qtdseguidores = item.CreatedBy.FollowersCount,
+                                idExecucao = execucao.Id,
+                            });
+                        }
+                    }
+
+                    Console.WriteLine("Inserir na base de dados");
+                    dal.InsertTwitters(execucao, lstTwitters);
+
+                    Console.WriteLine("Carregamento finalizado!!!");
+                }
             }
-
-            //var tweets2 = SearchAsync.SearchTweets(searchParameter);
-
-            //foreach (var item in tweets2.Result)
-            //{
-
-            //}
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }       
         }
 
         #region IDisposable Support

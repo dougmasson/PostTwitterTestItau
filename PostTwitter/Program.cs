@@ -10,9 +10,10 @@ namespace PostTwitter
             using (BLL bll = new BLL())
             {
                 bll.Init();
-
-                bll.GetHastTag(@"#devops");
+                bll.ListarPostagensTwitter();
             }
+
+            Console.ReadLine();
         }
     }
 }

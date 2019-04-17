@@ -9,4 +9,9 @@
     <PackageReference Include="TweetinviAPI" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PostTwitter.DAL\PostTwitter.DAL.csproj" />
+    <ProjectReference Include="..\PostTwitter.Model\PostTwitter.Model.csproj" />
+  </ItemGroup>
+
 </Project>
