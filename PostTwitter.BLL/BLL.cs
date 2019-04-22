@@ -1,65 +1,84 @@
-﻿using PostTwitter.DataAcess;
+﻿using Microsoft.Extensions.Configuration;
+using PostTwitter.DataAcess;
 using PostTwitter.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Tweetinvi;
 using Tweetinvi.Models;
 
 namespace PostTwitter.BusinnesLayer
 {
-    public class BLL : IDisposable
+    /// <summary>
+    /// Businnes Logic Layer
+    /// </summary>
+    public class BLL : BLLBasic, IDisposable
     {
+        private CredentialsTwitter credentialsTwitter;
+
+        public BLL()
+        {
+            CarregarParametros();
+        }
+
+        /// <summary>
+        /// Carregar parametros do appsettings.json
+        /// </summary>
+        private void CarregarParametros()
+        {
+            var builder = new ConfigurationBuilder()
+                              .SetBasePath(Directory.GetCurrentDirectory())
+                              .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfigurationRoot configuration = builder.Build();
+            credentialsTwitter = new CredentialsTwitter();
+            configuration.GetSection("CredentialsTwitter").Bind(credentialsTwitter);
+        }
+
+        /// <summary>
+        /// Iniciar Camada
+        /// </summary>
         public void Init()
         {
             Console.WriteLine("Iniciar");
 
-            Auth.SetUserCredentials(MyCredentials.CONSUMER_API_KEY, MyCredentials.CONSUMER_API_SECRET_KEY, MyCredentials.ACCESS_TOKEN, MyCredentials.ACCESS_TOKEN_SECRET);
-            var user = User.GetAuthenticatedUser();
+            try
+            {
+                Auth.SetUserCredentials(credentialsTwitter.consumerKey, credentialsTwitter.consumerSecret, credentialsTwitter.accessToken, credentialsTwitter.accessTokenSecret);
+                var user = User.GetAuthenticatedUser();
 
-            Console.Write(user);
+                if (user != null)
+                    Console.WriteLine("Usuario autenticado com sucesso");
+                else
+                    throw new Exception("Erro ao autenticar usuário");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
-        public void ListarPostagensTwitter()
+        /// <summary>
+        /// Listar as Postagens do Twitter para as #tags parametrizadas na base de dados e salva-las
+        /// </summary>
+        /// <returns></returns>
+        public Execucao ListarPostagensTwitter()
         {
             Console.WriteLine("Carregar Postagens");
+
+            Execucao execucao = null;
 
             try
             {
                 using (DAL dal = new DAL())
                 {
                     List<HashTag> hashTags = dal.BuscarHashTags();
-                    Execucao execucao = dal.InsertExecucao();
+                    execucao = dal.InsertExecucao();
 
-                    List<Twitters> lstTwitters = new List<Twitters>();
-
-                    RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackAndAwait;
-
-                    foreach (var hashTag in hashTags)
-                    {
-                        var searchParameter = Search.CreateTweetSearchParameter(hashTag.Descricao);
-                        searchParameter.SearchType = SearchResultType.Recent;
-                        searchParameter.MaximumNumberOfResults = 100;
-                        searchParameter.Since = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
-                        IEnumerable<ITweet> tweets = Search.SearchTweets(searchParameter);
-
-                        foreach (var item in tweets)
-                        {
-                            lstTwitters.Add(new Twitters()
-                            {
-                                idHashTag = hashTag.Id,
-                                texto = item.FullText,
-                                datatwitte = item.CreatedAt,
-                                idioma = item.Language.ToString(),
-                                usuario = item.CreatedBy.Name,
-                                qtdseguidores = item.CreatedBy.FollowersCount,
-                                idExecucao = execucao.Id,
-                            });
-                        }
-                    }
+                    List<Twitters> postagensTwitter = PostagensTwitter(execucao, hashTags);
 
                     Console.WriteLine("Inserir na base de dados");
-                    dal.InsertTwitters(execucao, lstTwitters);
+                    dal.InsertTwitters(execucao, postagensTwitter);
 
                     Console.WriteLine("Carregamento finalizado!!!");
                 }
@@ -67,7 +86,48 @@ namespace PostTwitter.BusinnesLayer
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-            }       
+            }
+
+            return execucao;
+        }
+
+        /// <summary>
+        /// Carregar as Postagens do Twitter
+        /// </summary>
+        /// <param name="execucao"></param>
+        /// <param name="hashTags"></param>
+        /// <returns></returns>
+        private List<Twitters> PostagensTwitter(Execucao execucao, List<HashTag> hashTags)
+        {
+            List<Twitters> lstTwitters = new List<Twitters>();
+
+            RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackAndAwait;
+
+            foreach (var hashTag in hashTags)
+            {
+                var searchParameter = Search.CreateTweetSearchParameter(hashTag.Descricao);
+                searchParameter.SearchType = SearchResultType.Recent;
+                searchParameter.MaximumNumberOfResults = 100;
+                searchParameter.Since = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+
+                IEnumerable<ITweet> tweets = Search.SearchTweets(searchParameter);
+
+                foreach (var item in tweets)
+                {
+                    lstTwitters.Add(new Twitters()
+                    {
+                        idHashTag = hashTag.Id,
+                        texto = item.FullText,
+                        datatwitte = item.CreatedAt,
+                        idioma = item.Language.ToString(),
+                        usuario = item.CreatedBy.Name,
+                        qtdseguidores = item.CreatedBy.FollowersCount,
+                        idExecucao = execucao.Id,
+                    });
+                }
+            }
+
+            return lstTwitters;
         }
 
         #region IDisposable Support
@@ -89,11 +149,11 @@ namespace PostTwitter.BusinnesLayer
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~BLL() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
+        ~BLL()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
 
         // This code added to correctly implement the disposable pattern.
         void IDisposable.Dispose()

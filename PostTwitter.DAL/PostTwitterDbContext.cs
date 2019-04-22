@@ -1,12 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PostTwitter.Model;
+using System.IO;
 
 namespace PostTwitter.DataAcess
 {
+    /// <summary>
+    /// Contexto do Entity Framework
+    /// </summary>
     public class PostTwitterDbContext : DbContext
     {
-        private const string connectionString = @"Server=.\SQLEXPRESS;Database=BaseTestItau;Trusted_Connection=True;";
-
         public DbSet<Status> Status { get; set; }
         public DbSet<Execucao> Execucao { get; set; }
         public DbSet<Twitters> Twitters { get; set; }
@@ -14,7 +17,12 @@ namespace PostTwitter.DataAcess
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(connectionString);
+            var builder = new ConfigurationBuilder()
+                              .SetBasePath(Directory.GetCurrentDirectory())
+                              .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfigurationRoot configuration = builder.Build();
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
         }
     }
 }

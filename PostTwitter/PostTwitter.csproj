@@ -13,4 +13,10 @@
     <ProjectReference Include="..\PostTwitter.BLL\PostTwitter.BLL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

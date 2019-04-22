@@ -2,12 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace PostTwitter.DataAcess
 {
+    /// <summary>
+    /// Data Acess Layer
+    /// </summary>
     public class DAL : IDisposable
     {
+        /// <summary>
+        /// Busca as #Tag para pesquisar
+        /// </summary>
+        /// <returns></returns>
         public List<HashTag> BuscarHashTags()
         {
             List<HashTag> hashTags = null;
@@ -16,7 +22,7 @@ namespace PostTwitter.DataAcess
             {
                 using (var context = new PostTwitterDbContext())
                 {
-                    hashTags = context.HashTags.Where(x => x.idStatus.Equals(ENUM.STATUS.ATIVO)).ToList();
+                    hashTags = context.HashTags.Where(x => x.idStatus.Equals((int)ENUM.STATUS.ATIVO)).ToList();
                 }
             }
             catch (Exception ex)
@@ -27,6 +33,10 @@ namespace PostTwitter.DataAcess
             return hashTags;
         }
 
+        /// <summary>
+        /// Criar registro de Execução
+        /// </summary>
+        /// <returns></returns>
         public Execucao InsertExecucao()
         {
             Execucao execucao = new Execucao()
@@ -36,15 +46,27 @@ namespace PostTwitter.DataAcess
                 idStatus = (int)ENUM.STATUS.EM_PROCESSAMENTO
             };
 
-            using (var context = new PostTwitterDbContext())
+            try
             {
-                context.Add(execucao);
-                context.SaveChanges();
+                using (var context = new PostTwitterDbContext())
+                {
+                    context.Add(execucao);
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
 
             return execucao;
         }
 
+        /// <summary>
+        ///  Armazenar as mensagens na base de dados
+        /// </summary>
+        /// <param name="execucao"></param>
+        /// <param name="lstTwitters"></param>
         public void InsertTwitters(Execucao execucao, List<Twitters> lstTwitters)
         {
             using (var context = new PostTwitterDbContext())
@@ -56,6 +78,9 @@ namespace PostTwitter.DataAcess
                 {
                     try
                     {
+                        if (lstTwitters == null || lstTwitters.Count == 0)
+                            throw new Exception("Lista Vazia");
+
                         foreach (var item in lstTwitters)
                         {
                             context.Add(item);
@@ -100,13 +125,12 @@ namespace PostTwitter.DataAcess
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~DAL() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
+        ~DAL()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
 
-        // This code added to correctly implement the disposable pattern.
         void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
