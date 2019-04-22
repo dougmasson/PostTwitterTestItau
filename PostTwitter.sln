@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1.Model", "1.Model", "{F809
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3.Controller", "3.Controller", "{10EC366F-3B96-401C-BE52-26FFA026A448}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostTwitter.NUnitTest", "PostTwitter.NUnitTest\PostTwitter.NUnitTest.csproj", "{50B39A14-B3FD-4840-AE6A-FB95BD455C16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F20D6803-426E-4200-A9CA-98FCD7A011E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F20D6803-426E-4200-A9CA-98FCD7A011E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F20D6803-426E-4200-A9CA-98FCD7A011E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50B39A14-B3FD-4840-AE6A-FB95BD455C16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50B39A14-B3FD-4840-AE6A-FB95BD455C16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50B39A14-B3FD-4840-AE6A-FB95BD455C16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50B39A14-B3FD-4840-AE6A-FB95BD455C16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

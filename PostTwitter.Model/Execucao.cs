@@ -15,5 +15,10 @@ namespace PostTwitter.Model
 
         [ForeignKey("idStatus")]
         public virtual Status Status { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("ID: {0} | Data: {1} | Usuario: {2} | Status: {3}", this.Id, this.Dataexecucao.ToString("dd/MM/yyy HH:mm"), this.Usuario, this.idStatus);
+        }
     }
 }

@@ -7,13 +7,26 @@ namespace PostTwitter
     {
         static void Main(string[] args)
         {
-            using (BLL bll = new BLL())
+            try
             {
-                bll.Init();
-                bll.ListarPostagensTwitter();
+                using (BLL bll = new BLL())
+                {
+                    bll.Init();
+                    var result = bll.ListarPostagensTwitter();
+
+                    if (result != null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(result.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("..::: ERRO: {0}", ex.Message));
             }
 
-            Console.ReadLine();
+            Console.ReadKey();
         }
     }
 }
